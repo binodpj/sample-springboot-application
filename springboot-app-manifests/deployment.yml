@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sample-springboot-app
+  labels:
+    app: sample-springboot-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: sample-springboot-app
+  template:
+    metadata:
+      labels:
+        app: sample-springboot-app
+    spec:
+      containers:
+      - name: sample-springboot-app
+        image: binod08/sample-springboot-app:replaceImageTag
+        ports:
+        - containerPort: 8080
