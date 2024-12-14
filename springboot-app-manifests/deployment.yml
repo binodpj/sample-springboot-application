@@ -16,6 +16,6 @@ spec:
     spec:
       containers:
       - name: sample-springboot-app
-        image: binod08/sample-springboot-app:replaceImageTag
+        image: binod08/sample-springboot-app:10
         ports:
         - containerPort: 8080
