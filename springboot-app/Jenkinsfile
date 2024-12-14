@@ -64,6 +64,10 @@ pipeline {
     //     }
     // }
     stage('Update Deployment File') {
+       environment {
+            GIT_REPO_NAME = "sample-springboot-application"
+            GIT_USER_NAME = "binodpj"
+        }
   steps {
     script {
       // Check if the file exists
