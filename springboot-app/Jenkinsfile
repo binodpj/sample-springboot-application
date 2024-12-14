@@ -15,23 +15,23 @@ pipeline {
     stage('Build and Test') {
       steps {
         // build the project and create a JAR file
-        sh 'mvn clean package'
+        sh 'cd springboot-app && mvn clean package'
       }
     }
     stage('Static Code Analysis') {
       environment {
-        SONAR_URL = "http://172.171.240.41/:9000/"
+        SONAR_URL = "http://172.178.112.147/"
       }
       steps {
         withCredentials([string(credentialsId: 'sonarqube', variable: 'SONAR_AUTH_TOKEN')]) {
-          sh 'mvn sonar:sonar -Dsonar.login=$SONAR_AUTH_TOKEN -Dsonar.host.url=${SONAR_URL}'
+          sh 'cd springboot-app && mvn sonar:sonar -Dsonar.login=$SONAR_AUTH_TOKEN -Dsonar.host.url=${SONAR_URL}'
         }
       }
     }
     stage('Build and Push Docker Image') {
       environment {
         DOCKER_IMAGE = "binod08/sample-springboot-app:${BUILD_NUMBER}"
-        // DOCKERFILE_LOCATION = "Dockerfile"
+        // DOCKERFILE_LOCATION = "springboot-app/Dockerfile"
         REGISTRY_CREDENTIALS = credentials('docker-cred')
       }
       steps {
@@ -46,7 +46,7 @@ pipeline {
     }
     stage('Update Deployment File') {
         environment {
-            GIT_REPO_NAME = "sample-springboot-application-manifests"
+            GIT_REPO_NAME = "sample-springboot-application"
             GIT_USER_NAME = "binodpj"
         }
         steps {
@@ -55,7 +55,7 @@ pipeline {
                     git config user.email "joshibinodprasad08@gmail.com"
                     git config user.name "Binod"
                     BUILD_NUMBER=${BUILD_NUMBER}
-                    sed -i "s/replaceImageTag/${BUILD_NUMBER}/g" deployment.yml
+                    sed -i "s/replaceImageTag/${BUILD_NUMBER}/g" springboot-app-manifests/deployment.yml
                     git add deployment.yml
                     git commit -m "Updated deployment image to version ${BUILD_NUMBER}"
                     git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:main
