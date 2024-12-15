@@ -18,16 +18,16 @@ pipeline {
         sh 'cd springboot-app && mvn clean package'
       }
     }
-    // stage('Static Code Analysis') {
-    //   environment {
-    //     SONAR_URL = "http://172.178.112.147/"
-    //   }
-    //   steps {
-    //     withCredentials([string(credentialsId: 'sonarqube', variable: 'SONAR_AUTH_TOKEN')]) {
-    //       sh 'cd springboot-app && mvn sonar:sonar -Dsonar.login=$SONAR_AUTH_TOKEN -Dsonar.host.url=${SONAR_URL}'
-    //     }
-    //   }
-    // }
+    stage('Static Code Analysis') {
+      environment {
+        SONAR_URL = "http://172.171.240.238:9000/"
+      }
+      steps {
+        withCredentials([string(credentialsId: 'sonarqube', variable: 'SONAR_AUTH_TOKEN')]) {
+          sh 'cd springboot-app && mvn sonar:sonar -Dsonar.login=$SONAR_AUTH_TOKEN -Dsonar.host.url=${SONAR_URL}'
+        }
+      }
+    }
     stage('Build and Push Docker Image') {
       environment {
         DOCKER_IMAGE = "binod08/sample-springboot-app:${BUILD_NUMBER}"
@@ -64,32 +64,33 @@ pipeline {
     //     }
     // }
     stage('Update Deployment File') {
-       environment {
+      environment {
             GIT_REPO_NAME = "sample-springboot-application"
             GIT_USER_NAME = "binodpj"
         }
-  steps {
-    script {
-      // Check if the file exists
-      def fileExists = sh(script: 'test -f springboot-app-manifests/deployment.yml && echo "exists" || echo "does not exist"', returnStdout: true).trim()
-      if (fileExists == 'exists') {
-        // File exists, proceed with updating
-        withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
-        sh '''
-          git config user.email "joshibinodprasad08@gmail.com"
-          git config user.name "Binod"
-          BUILD_NUMBER=${BUILD_NUMBER}
-          sed -i "s/replaceImageTag/${BUILD_NUMBER}/g" springboot-app-manifests/deployment.yml
-          git add springboot-app-manifests/deployment.yml
-          git commit -m "Updated deployment image to version ${BUILD_NUMBER}"
-          git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:main
-        '''
-      }} else {
-        error "The file deployment.yml does not exist!"
-      }
+        steps {
+          script {
+          // Check if the file exists
+            def fileExists = sh(script: 'test -f springboot-app-manifests/deployment.yml && echo "exists" || echo "does not exist"', returnStdout: true).trim()
+            if (fileExists == 'exists') {
+            // File exists, proceed with updating
+              withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
+                sh '''
+                  git config user.email "joshibinodprasad08@gmail.com"
+                  git config user.name "Binod"
+                  BUILD_NUMBER=${BUILD_NUMBER}
+                  sed -i "s/replaceImageTag/${BUILD_NUMBER}/g" springboot-app-manifests/deployment.yml
+                  git add springboot-app-manifests/deployment.yml
+                  git commit -m "Updated deployment image to version ${BUILD_NUMBER}"
+                  git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:main
+                '''
+              }
+            } else {
+              error "The file deployment.yml does not exist!"
+            }
+          }
+        }
     }
-  }
-}
 
   }
 }
